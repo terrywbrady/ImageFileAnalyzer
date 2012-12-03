@@ -26,17 +26,12 @@ public class XMPExtractor {
 	public XMPExtractor() {
 	}
 
-	public String getXMP(String[] xmppath) {
-		try {
-			if (xmp==null) return "";
-			//System.err.println(xmp.dumpObject());
-			XMPProperty xp = xmp.getProperty(xmppath[0], xmppath[1]);
-			if (xp==null) return "";
-			return xp.toString();
-		} catch (XMPException e) {
-			e.printStackTrace();
-			return "";
-		}
+	public String getXMP(String[] xmppath) throws XMPException {
+		if (xmp==null) return "";
+		//System.err.println(xmp.dumpObject());
+		XMPProperty xp = xmp.getProperty(xmppath[0], xmppath[1]);
+		if (xp==null) return "";
+		return xp.toString();
 	}
 	public ArrayList<Object> getTags() {
 		ArrayList<Object> list = new ArrayList<Object>();

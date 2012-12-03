@@ -155,7 +155,13 @@ public class TifExtractor extends DefaultExtractor {
 	
 	
 	public String getXMP(String[] xmppath) {
-		return xmpex.getXMP(xmppath);
+		try {
+			return xmpex.getXMP(xmppath);
+		} catch (XMPException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return "";
+		}
 	}
 	
 	public void close() {

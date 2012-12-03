@@ -6,19 +6,22 @@ import gov.nara.nwts.ftapp.filter.JpegFileTestFilter;
 import gov.nara.nwts.ftapp.filter.TiffFileTestFilter;
 import gov.nara.nwts.ftapp.filter.TiffJpegFileTestFilter;
 import gov.nara.nwts.ftappImg.jpeg.JpegExtractor;
-import gov.nara.nwts.ftappImg.stats.GenericImageStats;
 import gov.nara.nwts.ftappImg.tif.TifExtractor;
 import gov.nara.nwts.ftappImg.tags.XMPExtractor;
 import gov.nara.nwts.ftappImg.tags.ImageTags.DUP;
-import gov.nara.nwts.ftappImg.tags.ImageTags.NARAREQ;
+import gov.nara.nwts.ftappImg.tags.ImageTags.USAGE;
 import gov.nara.nwts.ftappImg.tags.ImageTags.TAGCONTENT;
 import gov.nara.nwts.ftappImg.tags.ImageTags.TAGS;
 import gov.nara.nwts.ftappImg.tags.ImageTags.TAGTYPE;
 import gov.nara.nwts.ftappImg.tags.ImageTags.TAGLOC;
 import gov.nara.nwts.ftapp.stats.Stats;
+import gov.nara.nwts.ftapp.stats.StatsItem;
+import gov.nara.nwts.ftapp.stats.StatsItemEnum;
 
 import java.io.File;
 import java.util.ArrayList;
+
+import com.adobe.xmp.XMPException;
 import com.adobe.xmp.properties.XMPPropertyInfo;
 import com.sun.media.jai.codec.TIFFField;
 
@@ -28,6 +31,49 @@ import com.sun.media.jai.codec.TIFFField;
  *
  */
 class GenericImageProperties extends DefaultFileTest { 
+	public static enum ImagePropStatsItems implements StatsItemEnum {
+		Key(StatsItem.makeStringStatsItem("Key", 60).setExport(false)),
+		File(StatsItem.makeStringStatsItem("File", 150)),
+		Name(StatsItem.makeEnumStatsItem(TAGS.class, "Name").setWidth(150)),
+		Path(StatsItem.makeStringStatsItem("Path", 200)),
+		Value(StatsItem.makeStringStatsItem("Value", 200)),
+		TagType(StatsItem.makeEnumStatsItem(TAGTYPE.class, "Type").setInitVal(TAGTYPE.TIFF_TAG)),
+		TagContent(StatsItem.makeEnumStatsItem(TAGCONTENT.class, "Contnent").setInitVal(TAGCONTENT.UNDECIDED)),
+		DupInfo(StatsItem.makeEnumStatsItem(DUP.class, "Dup Info").setInitVal(DUP.NA)),
+		TagLoc(StatsItem.makeEnumStatsItem(TAGLOC.class, "Loc").setWidth(50).setInitVal(TAGLOC.NA)),
+		Usage(StatsItem.makeEnumStatsItem(USAGE.class, "Usage").setWidth(120).setInitVal(USAGE.UNDECIDED)),
+		Error(StatsItem.makeStringStatsItem("Note/Error", 200)),
+		;
+		
+		StatsItem si;
+		ImagePropStatsItems(StatsItem si) {this.si=si;}
+		public StatsItem si() {return si;}
+	}
+
+	public class GenericImageStats extends Stats {
+		public GenericImageStats(String key) {
+			super(key);
+			init(ImagePropStatsItems.class);
+		}
+
+		public GenericImageStats(String key, String file, String name, String path, String value, TAGLOC tiffloc, TAGTYPE tagtype, USAGE usage, TAGCONTENT tagcontent, DUP dup) {
+			super(key);
+			init(ImagePropStatsItems.class);
+			setVal(ImagePropStatsItems.File, file);
+			setVal(ImagePropStatsItems.Name, name);
+			setVal(ImagePropStatsItems.Path, path);
+			setVal(ImagePropStatsItems.Value, value);
+			setVal(ImagePropStatsItems.TagType, tagtype);
+			setVal(ImagePropStatsItems.TagContent, tagcontent);
+			setVal(ImagePropStatsItems.DupInfo, dup);
+			setVal(ImagePropStatsItems.TagLoc, tiffloc);
+			setVal(ImagePropStatsItems.Usage, usage);
+		}
+
+	}
+
+	public static Object[][] details = StatsItem.toObjectArray(ImagePropStatsItems.class);
+
 	long counter = 1000000;
 	public GenericImageProperties(FTDriver dt) {
 		super(dt);
@@ -90,7 +136,7 @@ class GenericImageProperties extends DefaultFileTest {
 		String val = jpegext.getAttribute(tag);
 		TAGLOC tiffloc = TAGLOC.JPG;
 		TAGTYPE tagtype = TAGTYPE.JPG;
-		NARAREQ narareq = NARAREQ.UNDECIDED;
+		USAGE usage = USAGE.UNDECIDED;
 		TAGCONTENT tagcontent = TAGCONTENT.UNDECIDED;
 		DUP dupfield = DUP.NA;
 		String name = tag;
@@ -100,18 +146,18 @@ class GenericImageProperties extends DefaultFileTest {
 			tag = tagdef.name();
 			tiffloc = tagdef.tiffloc;
 			tagtype = tagdef.tagtype;
-			narareq = tagdef.narareq;
+			usage = tagdef.usage;
 			tagcontent = tagdef.tagcontent;
 			dupfield = tagdef.dup;			
 		}
 
-		return new GenericImageStats(""+counter,filekey,tag,name, val,tiffloc,tagtype,narareq,tagcontent, dupfield);		
+		return new GenericImageStats(""+counter,filekey,tag,name, val,tiffloc,tagtype,usage,tagcontent, dupfield);		
 	}
 	public GenericImageStats doTifObject(String filekey, TifExtractor tiffext, TIFFField tf) {
 		String tag = "";
 		TAGLOC tiffloc = TAGLOC.TAG;
 		TAGTYPE tagtype = TAGTYPE.TIFF_TAG;
-		NARAREQ narareq = NARAREQ.UNDECIDED;
+		USAGE usage = USAGE.UNDECIDED;
 		TAGCONTENT tagcontent = TAGCONTENT.UNDECIDED;
 		DUP dupfield = DUP.NA;
 		String path ="";
@@ -124,12 +170,12 @@ class GenericImageProperties extends DefaultFileTest {
 			path = "Tag: "+tagdef.tag;
 			tiffloc = tagdef.tiffloc;
 			tagtype = tagdef.tagtype;
-			narareq = tagdef.narareq;
+			usage = tagdef.usage;
 			tagcontent = tagdef.tagcontent;
 			dupfield = tagdef.dup;
 		}
 		String val = tiffext.getTiffObject(tf).toString();
-		return new GenericImageStats(""+counter,filekey,tag,path,val,tiffloc,tagtype,narareq,tagcontent, dupfield);
+		return new GenericImageStats(""+counter,filekey,tag,path,val,tiffloc,tagtype,usage,tagcontent, dupfield);
 	}
 	public GenericImageStats doXMPObject(String filekey, XMPExtractor xmpex, XMPPropertyInfo xpi) {
 		String tag = "";
@@ -137,7 +183,7 @@ class GenericImageProperties extends DefaultFileTest {
 		
 		TAGLOC tiffloc = TAGLOC.XMP;
 		TAGTYPE tagtype = TAGTYPE.OTHER_XMP;
-		NARAREQ narareq = NARAREQ.UNDECIDED;
+		USAGE usage = USAGE.UNDECIDED;
 		TAGCONTENT tagcontent = TAGCONTENT.UNDECIDED;
 		DUP dupfield = DUP.NA;
 
@@ -156,7 +202,7 @@ class GenericImageProperties extends DefaultFileTest {
 				if ((t.tiffloc == TAGLOC.XMP) && tag.equals(t.path)) {
 					tag = t.name();
 					tagtype = t.tagtype;
-					narareq = t.narareq;
+					usage = t.usage;
 					tagcontent = t.tagcontent;
 					dupfield = t.dup;
 					break;
@@ -170,8 +216,16 @@ class GenericImageProperties extends DefaultFileTest {
 				tag=xpi.getPath()+" --> "+xpi.getNamespace();						
 			}
 			
-			val = xmpex.getXMP(path);
-			return new GenericImageStats(""+counter,filekey,tag,path[1],val,tiffloc,tagtype,narareq,tagcontent, dupfield);
+			String err = "";
+			try {
+				val = xmpex.getXMP(path);
+			} catch (XMPException e) {
+				err = e.getMessage();
+				val = "";
+			}
+			GenericImageStats stat = new GenericImageStats(""+counter,filekey,tag,path[1],val,tiffloc,tagtype,usage,tagcontent, dupfield);
+			stat.setVal(ImagePropStatsItems.Error, err);
+			return stat;
 		}
 	}
 	
@@ -185,7 +239,7 @@ class GenericImageProperties extends DefaultFileTest {
     	return new GenericImageStats(key);
     }
     public Object[][] getStatsDetails() {
-    	return GenericImageStats.details;
+    	return details;
     }
 
 	public void initFilters() {
