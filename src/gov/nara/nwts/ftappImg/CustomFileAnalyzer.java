@@ -11,9 +11,9 @@ import gov.nara.nwts.ftappImg.filetest.ImageActionRegistry;
  * @author TBrady
  *
  */
-public class ImageFileAnalyzer extends DirectoryTable {
+public class CustomFileAnalyzer extends DirectoryTable {
 
-	public ImageFileAnalyzer(File f, boolean modifyAllowed) {
+	public CustomFileAnalyzer(File f, boolean modifyAllowed) {
 		super(f, modifyAllowed);
 	}
 	
@@ -26,9 +26,9 @@ public class ImageFileAnalyzer extends DirectoryTable {
 	}
 	public static void main(String[] args) {
 		if (args.length > 0)
-			new ImageFileAnalyzer(new File(args[0]), false);		
+			new CustomFileAnalyzer(new File(args[0]), false);		
 		else
-			new ImageFileAnalyzer(null, false);		
+			new CustomFileAnalyzer(null, false);		
 	}
 
 }
