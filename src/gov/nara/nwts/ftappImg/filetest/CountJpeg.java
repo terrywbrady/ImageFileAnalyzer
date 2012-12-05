@@ -7,6 +7,7 @@ import gov.nara.nwts.ftapp.filter.JpegFileTestFilter;
 import gov.nara.nwts.ftappImg.jpeg.JpegExtractor;
 import gov.nara.nwts.ftapp.stats.Stats;
 import gov.nara.nwts.ftapp.stats.StatsItem;
+import gov.nara.nwts.ftapp.stats.StatsItemConfig;
 import gov.nara.nwts.ftapp.stats.StatsItemEnum;
 
 import java.io.File;
@@ -18,7 +19,7 @@ import java.io.File;
  */
 class CountJpeg extends DefaultFileTest { 
 
-	public static enum JpegCountStatsItems implements StatsItemEnum {
+	private static enum JpegCountStatsItems implements StatsItemEnum {
 		File(StatsItem.makeStringStatsItem("File", 200)),
 		BitsPerSample(StatsItem.makeIntStatsItem("tiff:BitsPerSample")),
 		ColorSpace(StatsItem.makeStringStatsItem("Color Space", 200)),
@@ -45,12 +46,12 @@ class CountJpeg extends DefaultFileTest {
 		public StatsItem si() {return si;}
 	}
 	
-	public static Object[][] details = StatsItem.toObjectArray(JpegCountStatsItems.class);
-	public class JpegStats extends Stats {
+	public static StatsItemConfig details = StatsItemConfig.create(JpegCountStatsItems.class);
+	private class JpegStats extends Stats {
 
 		public JpegStats(String key) {
 			super(key);
-			init(JpegCountStatsItems.class);
+			init(details);
 		}
 		
 		
@@ -97,7 +98,7 @@ class CountJpeg extends DefaultFileTest {
     public Stats createStats(String key){ 
     	return new JpegStats(key);
     }
-    public Object[][] getStatsDetails() {
+    public StatsItemConfig getStatsDetails() {
     	return details;
     }
 

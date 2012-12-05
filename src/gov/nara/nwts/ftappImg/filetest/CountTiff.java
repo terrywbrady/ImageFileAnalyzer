@@ -9,6 +9,7 @@ import gov.nara.nwts.ftappImg.tags.ImageTags.TAGS;
 import gov.nara.nwts.ftappImg.tif.TifExtractor;
 import gov.nara.nwts.ftapp.stats.Stats;
 import gov.nara.nwts.ftapp.stats.StatsItem;
+import gov.nara.nwts.ftapp.stats.StatsItemConfig;
 import gov.nara.nwts.ftapp.stats.StatsItemEnum;
 
 import java.io.File;
@@ -20,7 +21,7 @@ import java.io.File;
  */
 class CountTiff extends DefaultFileTest { 
 
-	public static enum ImageStatsItems implements StatsItemEnum {
+	private static enum ImageStatsItems implements StatsItemEnum {
 		File(StatsItem.makeStringStatsItem("File", 200)),
 		BitsPerChannel(StatsItem.makeIntStatsItem("Bits/Channel (258)")),
 		ColorSpace(StatsItem.makeIntStatsItem("Color Space (262)")),
@@ -40,13 +41,12 @@ class CountTiff extends DefaultFileTest {
 		public StatsItem si() {return si;}
 	}
 	
-	public static Object[][] details = StatsItem.toObjectArray(ImageStatsItems.class);
-
+	public static StatsItemConfig details = StatsItemConfig.create(ImageStatsItems.class);
 	public class ImageStats extends Stats {
 
 		public ImageStats(String key) {
 			super(key);
-			init(ImageStatsItems.class);
+			init(details);
 		}
 		
 		public Object compute(File f, FileTest fileTest) {
@@ -90,7 +90,7 @@ class CountTiff extends DefaultFileTest {
     public Stats createStats(String key){ 
     	return new ImageStats(key);
     }
-    public Object[][] getStatsDetails() {
+    public StatsItemConfig getStatsDetails() {
     	return details;
     }
 

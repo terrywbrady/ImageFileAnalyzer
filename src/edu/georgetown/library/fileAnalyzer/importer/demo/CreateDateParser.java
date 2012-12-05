@@ -22,6 +22,7 @@ import gov.nara.nwts.ftapp.importer.DefaultImporter;
 import gov.nara.nwts.ftapp.importer.DelimitedFileImporter;
 import gov.nara.nwts.ftapp.stats.Stats;
 import gov.nara.nwts.ftapp.stats.StatsItem;
+import gov.nara.nwts.ftapp.stats.StatsItemConfig;
 import gov.nara.nwts.ftapp.stats.StatsItemEnum;
 
 public class CreateDateParser extends DefaultImporter {
@@ -69,8 +70,8 @@ public class CreateDateParser extends DefaultImporter {
 		dv.addValidationPattern("^\\d\\d\\d\\d\\d\\d\\d\\d$", "yyyyMMdd");
 	}
 
-    public enum TY {C,I,D,A,V}
-	public static List<EnumSet<TY>> getDateCombos(){
+    private enum TY {C,I,D,A,V}
+	private static List<EnumSet<TY>> getDateCombos(){
 		ArrayList<EnumSet<TY>> list = new ArrayList<EnumSet<TY>>();
 		for(int ci=0; ci<2; ci++) {
 			for(int ii=0; ii<2; ii++) {
@@ -83,7 +84,7 @@ public class CreateDateParser extends DefaultImporter {
 							if (di == 0) ilist.add(TY.D);
 							if (ai == 0) ilist.add(TY.A);
 							if (vi == 0) ilist.add(TY.V);
-							EnumSet<TY> set = EnumSet.copyOf(ilist);
+							EnumSet<TY> set = (ilist.isEmpty()) ? EnumSet.noneOf(TY.class) : EnumSet.copyOf(ilist);
 							list.add(set);
 						}
 					}
@@ -92,10 +93,10 @@ public class CreateDateParser extends DefaultImporter {
 		}
 		return list;
 	}
-	public static String getDateMix() {
+	private static String getDateMix() {
 		return "NA";
 	}
-	public static String getDateMix(EnumSet<TY> set) {
+	private static String getDateMix(EnumSet<TY> set) {
 		if (set == null) return getDateMix(); 
 		String s = "";
 		for(TY t: TY.values()) {
@@ -108,7 +109,7 @@ public class CreateDateParser extends DefaultImporter {
 		return s;
 	}
 	
-	public static String getDateMix(DateValidationStatus[] dstats) {
+	private static String getDateMix(DateValidationStatus[] dstats) {
 		ArrayList<TY> list = new ArrayList<TY>();
 		for(TY t: TY.values()) {
 			if (dstats[t.ordinal()].exists()) list.add(t);
@@ -116,7 +117,7 @@ public class CreateDateParser extends DefaultImporter {
 		return getDateMix(EnumSet.copyOf(list));
 	}
 
-	public static List<String> getDateMixNames() {
+	private static List<String> getDateMixNames() {
 		ArrayList<String> list = new ArrayList<String>();
 		for(EnumSet<TY> set: getDateCombos()) {
 			list.add(getDateMix(set));
@@ -125,7 +126,7 @@ public class CreateDateParser extends DefaultImporter {
 		return list;
 	}
 	
-	public static enum DSpaceDateStatsItems implements StatsItemEnum {
+	private static enum DSpaceDateStatsItems implements StatsItemEnum {
 		ItemId(StatsItem.makeStringStatsItem("Item Id", 80)),
 		OverallStat(StatsItem.makeEnumStatsItem(DateValidationStatus.class, "Pass/Fail",DateValidationStatus.MISSING).setWidth(80)),
 		ResolvedDate(StatsItem.makeStringStatsItem("Res Date", 130)),
@@ -169,13 +170,11 @@ public class CreateDateParser extends DefaultImporter {
 		public StatsItem si() {return si;}
 	}
 
-	public static Object[][] details = StatsItem.toObjectArray(DSpaceDateStatsItems.class);
-	
 	class DSpaceDateStats extends Stats {
 
 		public DSpaceDateStats(String key) {
 			super(key);
-			init(DSpaceDateStatsItems.class);
+			init(details);
 		}
 		
 	}
@@ -183,7 +182,8 @@ public class CreateDateParser extends DefaultImporter {
 	int cols = 8;
 	Object[][]mydetails;
 	
-	public Object[][] getDetails() {
+	static StatsItemConfig details = StatsItemConfig.create(DSpaceDateStatsItems.class);
+	public StatsItemConfig getDetails() {
 		return details;
 	}
 
@@ -288,7 +288,7 @@ public class CreateDateParser extends DefaultImporter {
 			types.put(item, stats);			
 		}
 		
-		return new ActionResult(selectedFile, selectedFile.getName(), this.toString(), details, types, true, timer.getDuration());
+		return new ActionResult(selectedFile, selectedFile.getName(), this.toString(), getDetails(), types, true, timer.getDuration());
 	}
 	
 }

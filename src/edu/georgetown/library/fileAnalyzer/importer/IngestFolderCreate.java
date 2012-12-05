@@ -20,6 +20,9 @@ import gov.nara.nwts.ftapp.Timer;
 import gov.nara.nwts.ftapp.importer.DefaultImporter;
 import gov.nara.nwts.ftapp.importer.DelimitedFileImporter;
 import gov.nara.nwts.ftapp.stats.Stats;
+import gov.nara.nwts.ftapp.stats.StatsItem;
+import gov.nara.nwts.ftapp.stats.StatsItemConfig;
+import gov.nara.nwts.ftapp.stats.StatsItemEnum;
 import gov.nara.nwts.ftapp.util.XMLUtil;
 
 /**
@@ -27,6 +30,25 @@ import gov.nara.nwts.ftapp.util.XMLUtil;
  *
  */
 public class IngestFolderCreate extends DefaultImporter {
+	private static enum IngestStatsItems implements StatsItemEnum {
+		LineNo(StatsItem.makeStringStatsItem("Line No").setExport(false)),
+		Status(StatsItem.makeEnumStatsItem(status.class, "Status")),
+		Message(StatsItem.makeStringStatsItem("Message").setExport(false))
+		;
+		
+		StatsItem si;
+		IngestStatsItems(StatsItem si) {this.si=si;}
+		public StatsItem si() {return si;}
+	}
+
+	public class IngestStats extends Stats {
+		
+		public IngestStats(String key) {
+			super(key);
+			init(details);
+		}
+
+	}
 	class column {
 		boolean valid;
 		boolean fixed;
@@ -87,33 +109,22 @@ public class IngestFolderCreate extends DefaultImporter {
 	Vector<column> colHeaderDefs;
 	HashMap<String,column> colByName;
 	HashMap<String,Integer> folders;
-	public Object[][] getDetails(Object[][] details) {
-		Vector<Object[]> vdetails = new Vector<Object[]>();
-		for(Object[] detail: details) {
-			vdetails.add(detail);
-		}
-		
+	
+	StatsItemConfig details = StatsItemConfig.create(IngestStatsItems.class); 
+	public StatsItemConfig getDetails() {
+		StatsItemConfig mydetails = StatsItemConfig.create(IngestStatsItems.class); 
 		for(column col: colHeaderDefs) {
 			if (col.valid || col.fixed) {
-				Object[] detail = new Object[3];
-				detail[0] = String.class;
-				detail[1] = col.name;
-				detail[2] = 150;
-				vdetails.add(detail);
+				mydetails.addStatsItem(col.inputCol, StatsItem.makeStringStatsItem(col.name, 150));
 			}
 		}
 		
-		return vdetails.toArray(new Object[0][]);
+		return mydetails;
 	}
 	
 	public enum status {INIT,PASS,WARN,FAIL}
 	NumberFormat nf;
 	
-	public static Object[][] details = {
-		{String.class,"LineNo",100,null,false},
-		{status.class,"Status",100,status.values()},
-		{String.class,"Message",100,null,false},
-	};
 	public IngestFolderCreate(FTDriver dt) {
 		super(dt);
 		nf = NumberFormat.getNumberInstance();
@@ -244,19 +255,19 @@ public class IngestFolderCreate extends DefaultImporter {
 		for(int r=1; r<data.size(); r++) {
 			Vector<String> cols = data.get(r);
 			String key = nf.format(rowKey++);
-			Stats stats = new Stats(key);
+			IngestStats stats = new IngestStats(key);
 			importRow(selectedFile, cols, stats);
 			
 			types.put(key, stats);
 		}
 		
-		return new ActionResult(selectedFile, selectedFile.getName(), this.toString(), getDetails(details), types, true, timer.getDuration());
+		return new ActionResult(selectedFile, selectedFile.getName(), this.toString(), getDetails(), types, true, timer.getDuration());
 	}
 
 	public void importRow(File selectedFile, Vector<String> cols,Stats stats) {
 		createStatus cs = new createStatus(status.INIT, "");
-		stats.vals.add(cs.stat);
-		stats.vals.add(cs.message);
+		stats.setVal(IngestStatsItems.Status, cs.stat);
+		stats.setVal(IngestStatsItems.Message, cs.message);
 		
 		if (cols.size() == colHeaderDefs.size()) {
 			String folder = "";
@@ -267,7 +278,7 @@ public class IngestFolderCreate extends DefaultImporter {
 				column colhead = colHeaderDefs.get(i);
 				String val = cols.get(i);
 				if ((colhead.fixed || colhead.valid)) {
-					stats.vals.add(val);
+					stats.setKeyVal(details.getByKey(i), val);
 				}
 				
 				if ((colhead.fixed) && (cs.stat == status.INIT)) {
@@ -333,11 +344,11 @@ public class IngestFolderCreate extends DefaultImporter {
 				cs = cs.append(createItem(selectedFile, cols));
 			}
 			
-			stats.vals.set(0, cs.stat);
-			stats.vals.set(1, cs.message);					
+			stats.setVal(IngestStatsItems.Status, cs.stat);
+			stats.setVal(IngestStatsItems.Message, cs.message);					
 		} else {
-			stats.vals.set(0, status.FAIL);
-			stats.vals.set(1, ""+cols.size()+" : "+colHeaderDefs.size());
+			stats.setVal(IngestStatsItems.Status, status.FAIL);
+			stats.setVal(IngestStatsItems.Message, ""+cols.size()+" : "+colHeaderDefs.size());
 		}
 		
     	

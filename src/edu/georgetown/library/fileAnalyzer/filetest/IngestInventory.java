@@ -2,13 +2,12 @@ package edu.georgetown.library.fileAnalyzer.filetest;
 
 import java.io.File;
 import java.text.NumberFormat;
-import java.util.Vector;
 
 import edu.georgetown.library.fileAnalyzer.filter.GUImageFileTestFilter;
-import edu.georgetown.library.fileAnalyzer.stats.DSpaceInventoryStats;
 
 import gov.nara.nwts.ftapp.FTDriver;
 import gov.nara.nwts.ftapp.filetest.DefaultFileTest;
+import gov.nara.nwts.ftapp.filetest.FileTest;
 import gov.nara.nwts.ftapp.filter.Jp2FileTestFilter;
 import gov.nara.nwts.ftapp.filter.JpegFileTestFilter;
 import gov.nara.nwts.ftapp.filter.PdfFileTestFilter;
@@ -16,8 +15,47 @@ import gov.nara.nwts.ftapp.filter.TiffFileTestFilter;
 import gov.nara.nwts.ftapp.ftprop.FTProp;
 import gov.nara.nwts.ftapp.ftprop.FTPropEnum;
 import gov.nara.nwts.ftapp.stats.Stats;
+import gov.nara.nwts.ftapp.stats.StatsItem;
+import gov.nara.nwts.ftapp.stats.StatsItemConfig;
+import gov.nara.nwts.ftapp.stats.StatsItemEnum;
 
 public class IngestInventory extends DefaultFileTest {
+
+	private static enum InventoryStatsItems implements StatsItemEnum {
+		Key(StatsItem.makeStringStatsItem("Key")),
+		File(StatsItem.makeStringStatsItem("File")),
+		ThumbFile(StatsItem.makeStringStatsItem("Thumb File"))
+		;
+		
+		StatsItem si;
+		InventoryStatsItems(StatsItem si) {this.si=si;}
+		public StatsItem si() {return si;}
+	}
+
+	static StatsItemConfig details = StatsItemConfig.create(InventoryStatsItems.class);
+	public class InventoryStats extends Stats {
+		
+		public InventoryStats(String key) {
+			super(key);
+			init(details);
+		}
+		
+		public Object compute(File f, FileTest fileTest) {
+			Object o = fileTest.fileTest(f);
+			
+			String path = f.getAbsolutePath().substring(fileTest.getRoot().getAbsolutePath().length()+1);
+			String tpath = path + ".jpg";
+			String tfull = fileTest.getRoot().getAbsolutePath() + "\\" + tpath;
+			File f2 = new File(tfull);
+			if (!f2.exists()) tpath = "";
+			
+			setVal(InventoryStatsItems.File, path);
+			setVal(InventoryStatsItems.ThumbFile, tpath);
+			
+			return o;
+		}
+
+	}
 
 	public static final String[] META = { "NA", "dc.contributor",
 			"dc.coverage.spatial", "dc.coverage.temporal", "dc.creator",
@@ -74,7 +112,7 @@ public class IngestInventory extends DefaultFileTest {
 		return "folder_" + nf.format(count);
 	}
 	
-
+	int count;
 	public Object fileTest(File f) {
 		count++;
 		return count;
@@ -88,27 +126,15 @@ public class IngestInventory extends DefaultFileTest {
 		return "Ingest Inventory";
 	}
 
-    public Object[][] getStatsDetails() {
-    	return vdetails.toArray(new Object[0][]);
+    public StatsItemConfig getStatsDetails() {
+    	return details;
     }
 
-    Vector<Object[]> vdetails;
-    static Object[] key = {String.class, "Item Folder", 100};
-    static Object[] file = {String.class, "Item File", 100};
-    static Object[] tfile = {String.class, "Item Thumb", 100};
-    int count;
     
     public void init() {
-    	count = 0;
-    	vdetails = new Vector<Object[]>();
-    	vdetails.add(key);
-    	vdetails.add(file);
-    	vdetails.add(tfile);
-    	
     	for(FTProp prop: ftprops) {
     		if (prop.getValue().equals("NA")) continue;
-    		Object[] obj = {String.class, prop.getValue(), 100};
-    		vdetails.add(obj);
+    		details.addStatsItem(prop.getValue(), StatsItem.makeStringStatsItem(prop.getValue().toString()));
     	}
     }
     
@@ -130,7 +156,7 @@ public class IngestInventory extends DefaultFileTest {
 	}
 
     public Stats createStats(String key){
-    	return new DSpaceInventoryStats(key, vdetails.size()-1);
+    	return new InventoryStats(key);
     }
 
 }

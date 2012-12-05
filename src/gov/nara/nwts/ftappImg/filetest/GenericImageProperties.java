@@ -16,6 +16,7 @@ import gov.nara.nwts.ftappImg.tags.ImageTags.TAGTYPE;
 import gov.nara.nwts.ftappImg.tags.ImageTags.TAGLOC;
 import gov.nara.nwts.ftapp.stats.Stats;
 import gov.nara.nwts.ftapp.stats.StatsItem;
+import gov.nara.nwts.ftapp.stats.StatsItemConfig;
 import gov.nara.nwts.ftapp.stats.StatsItemEnum;
 
 import java.io.File;
@@ -31,7 +32,7 @@ import com.sun.media.jai.codec.TIFFField;
  *
  */
 class GenericImageProperties extends DefaultFileTest { 
-	public static enum ImagePropStatsItems implements StatsItemEnum {
+	private static enum ImagePropStatsItems implements StatsItemEnum {
 		Key(StatsItem.makeStringStatsItem("Key", 60).setExport(false)),
 		File(StatsItem.makeStringStatsItem("File", 150)),
 		Name(StatsItem.makeEnumStatsItem(TAGS.class, "Name").setWidth(150)),
@@ -50,15 +51,17 @@ class GenericImageProperties extends DefaultFileTest {
 		public StatsItem si() {return si;}
 	}
 
-	public class GenericImageStats extends Stats {
+	public static StatsItemConfig details = StatsItemConfig.create(ImagePropStatsItems.class);
+	
+	private class GenericImageStats extends Stats {
 		public GenericImageStats(String key) {
 			super(key);
-			init(ImagePropStatsItems.class);
+			init(details);
 		}
 
 		public GenericImageStats(String key, String file, String name, String path, String value, TAGLOC tiffloc, TAGTYPE tagtype, USAGE usage, TAGCONTENT tagcontent, DUP dup) {
 			super(key);
-			init(ImagePropStatsItems.class);
+			init(details);
 			setVal(ImagePropStatsItems.File, file);
 			setVal(ImagePropStatsItems.Name, name);
 			setVal(ImagePropStatsItems.Path, path);
@@ -72,7 +75,6 @@ class GenericImageProperties extends DefaultFileTest {
 
 	}
 
-	public static Object[][] details = StatsItem.toObjectArray(ImagePropStatsItems.class);
 
 	long counter = 1000000;
 	public GenericImageProperties(FTDriver dt) {
@@ -238,8 +240,8 @@ class GenericImageProperties extends DefaultFileTest {
     public Stats createStats(String key){ 
     	return new GenericImageStats(key);
     }
-    public Object[][] getStatsDetails() {
-    	return details;
+    public StatsItemConfig getStatsDetails() {
+    	return details; 
     }
 
 	public void initFilters() {

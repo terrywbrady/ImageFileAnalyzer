@@ -14,6 +14,7 @@ import gov.nara.nwts.ftapp.Timer;
 import gov.nara.nwts.ftapp.importer.DefaultImporter;
 import gov.nara.nwts.ftapp.stats.Stats;
 import gov.nara.nwts.ftapp.stats.StatsItem;
+import gov.nara.nwts.ftapp.stats.StatsItemConfig;
 import gov.nara.nwts.ftapp.stats.StatsItemEnum;
 
 /**
@@ -37,12 +38,12 @@ public class MarcImporter extends DefaultImporter {
 		public StatsItem si() {return si;}
 	}
 
-	public static Object[][] details = StatsItem.toObjectArray(MarcStatsItems.class);
+	static StatsItemConfig details = StatsItemConfig.create(MarcStatsItems.class);
 	public class MarcStats extends Stats {
 		
 		public MarcStats(String key) {
 			super(key);
-			init(MarcStatsItems.class);
+			init(details);
 		}
 
 	}

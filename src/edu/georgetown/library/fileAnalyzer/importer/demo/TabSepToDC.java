@@ -17,6 +17,7 @@ import gov.nara.nwts.ftapp.Timer;
 import gov.nara.nwts.ftapp.importer.DelimitedFileImporter;
 import gov.nara.nwts.ftapp.stats.Stats;
 import gov.nara.nwts.ftapp.stats.StatsItem;
+import gov.nara.nwts.ftapp.stats.StatsItemConfig;
 import gov.nara.nwts.ftapp.stats.StatsItemEnum;
 import gov.nara.nwts.ftapp.util.XMLUtil;
 
@@ -50,12 +51,12 @@ public class TabSepToDC extends DelimitedFileImporter {
 		public StatsItem si() {return si;}
 	}
 
-	public static Object[][] details = StatsItem.toObjectArray(DCStatsItems.class);
-	public class DCStats extends Stats {
+	static StatsItemConfig details = StatsItemConfig.create(DCStatsItems.class);
+	private class DCStats extends Stats {
 		
 		public DCStats(String key) {
 			super(key);
-			init(DCStatsItems.class);
+			init(details);
 		}
 
 		public void setColumnVals(Vector<String> cols) {

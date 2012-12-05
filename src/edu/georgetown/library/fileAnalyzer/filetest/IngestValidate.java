@@ -4,6 +4,7 @@ import gov.nara.nwts.ftapp.FTDriver;
 import gov.nara.nwts.ftapp.filetest.DefaultFileTest;
 import gov.nara.nwts.ftapp.stats.Stats;
 import gov.nara.nwts.ftapp.stats.StatsItem;
+import gov.nara.nwts.ftapp.stats.StatsItemConfig;
 import gov.nara.nwts.ftapp.stats.StatsItemEnum;
 import gov.nara.nwts.ftapp.util.XMLUtil;
 
@@ -81,12 +82,12 @@ public class IngestValidate extends DefaultFileTest {
 		public StatsItem si() {return si;}
 	}
 
-	public static Object[][] details = StatsItem.toObjectArray(DSpaceStatsItems.class);
+	public static StatsItemConfig details = StatsItemConfig.create(DSpaceStatsItems.class);
 	public class DSpaceStats extends Stats {
 		
 		public DSpaceStats(String key) {
 			super(key);
-			init(DSpaceStatsItems.class);
+			init(details);
 		}
 
 		public void setInfo(DSpaceInfo info) {
@@ -111,7 +112,6 @@ public class IngestValidate extends DefaultFileTest {
 		}
 
 	}
-	
 	
 	public class DSpaceInfo {
 		public File contents = null;
@@ -278,7 +278,7 @@ public class IngestValidate extends DefaultFileTest {
     public Stats createStats(String key){ 
     	return new DSpaceStats(key);
     }
-    public Object[][] getStatsDetails() {
+    public StatsItemConfig getStatsDetails() {
     	return details;
     }
 
