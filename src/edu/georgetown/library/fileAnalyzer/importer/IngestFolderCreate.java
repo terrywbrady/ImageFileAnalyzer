@@ -109,14 +109,7 @@ public class IngestFolderCreate extends DefaultImporter {
 	HashMap<String,Integer> folders;
 	
 	public StatsItemConfig getDetails() {
-		StatsItemConfig mydetails = StatsItemConfig.create(IngestStatsItems.class); 
-		for(column col: colHeaderDefs) {
-			if (col.valid || col.fixed) {
-				mydetails.addStatsItem(col.inputCol, StatsItem.makeStringStatsItem(col.name, 150));
-			}
-		}
-		
-		return mydetails;
+		return details;
 	}
 	
 	public enum status {INIT,PASS,WARN,FAIL}
@@ -159,7 +152,14 @@ public class IngestFolderCreate extends DefaultImporter {
 				addElement(e, colhead.element, colhead.qualifier, col);
 			}
 		}
-		
+
+		details = StatsItemConfig.create(IngestStatsItems.class); 
+		for(column col: colHeaderDefs) {
+			if (col.valid || col.fixed) {
+				details.addStatsItem(col.inputCol, StatsItem.makeStringStatsItem(col.name, 150));
+			}
+		}
+
 		StringBuffer buf = new StringBuffer();
 		File dir = new File(new File(selectedFile.getParentFile(), "ingest"), cols.get(0));
 		dir.mkdirs();

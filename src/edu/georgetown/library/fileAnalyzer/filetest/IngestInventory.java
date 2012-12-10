@@ -131,6 +131,7 @@ public class IngestInventory extends DefaultFileTest {
 
     
     public void init() {
+    	details = StatsItemConfig.create(InventoryStatsItems.class);
     	for(FTProp prop: ftprops) {
     		if (prop.getValue().equals("NA")) continue;
     		details.addStatsItem(prop.getValue(), StatsItem.makeStringStatsItem(prop.getValue().toString()));

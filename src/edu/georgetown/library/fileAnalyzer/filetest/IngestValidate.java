@@ -93,8 +93,8 @@ public class IngestValidate extends DefaultFileTest {
 			}
 
 			public void setInfo(DSpaceInfo info) {
-				setVal(DSpaceStatsItems.ItemFolder, info.overall_stat);
-				setVal(DSpaceStatsItems.OverallStat, info.files.length);
+				setVal(DSpaceStatsItems.OverallStat, info.overall_stat);
+				setVal(DSpaceStatsItems.NumFiles, info.files.length);
 				setVal(DSpaceStatsItems.ContentsStat, info.contents_stat);
 				setVal(DSpaceStatsItems.ContentFileCount, info.contentsList.size());
 				setVal(DSpaceStatsItems.DublinCoreStat, info.dc_stat);

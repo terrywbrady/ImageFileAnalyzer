@@ -1,0 +1,1 @@
+This code makes use of code originally created as the NARA File Analyzer and Metadata Harvester which is availabe at This code has been derived from the NARA File Analyzer and Metadata Harvester which is available at https://github.com/usnationalarchives/File-Analyzer.
