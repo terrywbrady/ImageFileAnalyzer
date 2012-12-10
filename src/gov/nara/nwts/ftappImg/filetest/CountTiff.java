@@ -8,6 +8,7 @@ import gov.nara.nwts.ftappImg.tags.XMPExtractor;
 import gov.nara.nwts.ftappImg.tags.ImageTags.TAGS;
 import gov.nara.nwts.ftappImg.tif.TifExtractor;
 import gov.nara.nwts.ftapp.stats.Stats;
+import gov.nara.nwts.ftapp.stats.StatsGenerator;
 import gov.nara.nwts.ftapp.stats.StatsItem;
 import gov.nara.nwts.ftapp.stats.StatsItemConfig;
 import gov.nara.nwts.ftapp.stats.StatsItemEnum;
@@ -41,35 +42,39 @@ class CountTiff extends DefaultFileTest {
 		public StatsItem si() {return si;}
 	}
 	
-	public static StatsItemConfig details = StatsItemConfig.create(ImageStatsItems.class);
-	public class ImageStats extends Stats {
+	public static enum Generator implements StatsGenerator {
+		INSTANCE;
 
-		public ImageStats(String key) {
-			super(key);
-			init(details);
-		}
-		
-		public Object compute(File f, FileTest fileTest) {
-			TifExtractor tiffext = new TifExtractor(f);
-			setVal(ImageStatsItems.BitsPerChannel,tiffext.getTiffInt(TAGS.TIFF_BITS_PER_CHANNEL));
-			setVal(ImageStatsItems.ColorSpace,tiffext.getTiffInt(TAGS.TIFF_COLOR_SPACE));
-			setVal(ImageStatsItems.ICCProfile,tiffext.getXMP(XMPExtractor.XMP_ICC));
-			String tfs = tiffext.getTiffString(TAGS.TIFF_DESCRIPTION);
-			setVal(ImageStatsItems.Description,tfs);
-			setVal(ImageStatsItems.Keywords, tiffext.getXMP(XMPExtractor.XMP_KEY));
-			setVal(ImageStatsItems.Instruction, tiffext.getXMP(XMPExtractor.XMP_INSTR));
+		public class ImageStats extends Stats {
 
-			String[] parts = tfs.split("(\\s\\s\\s+|\n)");
-			for(int i=0; (i < parts.length) && (i <4); i++){
-				if (i==0) setVal(ImageStatsItems.Desc1,parts[i]);
-				if (i==1) setVal(ImageStatsItems.Desc2,parts[i]);
-				if (i==2) setVal(ImageStatsItems.Desc3,parts[i]);
-				if (i==3) setVal(ImageStatsItems.Desc4,parts[i]);
+			public ImageStats(String key) {
+				super(details, key);
 			}
-			tiffext.close();
-			return fileTest.fileTest(f);
+			
+			public Object compute(File f, FileTest fileTest) {
+				TifExtractor tiffext = new TifExtractor(f);
+				setVal(ImageStatsItems.BitsPerChannel,tiffext.getTiffInt(TAGS.TIFF_BITS_PER_CHANNEL));
+				setVal(ImageStatsItems.ColorSpace,tiffext.getTiffInt(TAGS.TIFF_COLOR_SPACE));
+				setVal(ImageStatsItems.ICCProfile,tiffext.getXMP(XMPExtractor.XMP_ICC));
+				String tfs = tiffext.getTiffString(TAGS.TIFF_DESCRIPTION);
+				setVal(ImageStatsItems.Description,tfs);
+				setVal(ImageStatsItems.Keywords, tiffext.getXMP(XMPExtractor.XMP_KEY));
+				setVal(ImageStatsItems.Instruction, tiffext.getXMP(XMPExtractor.XMP_INSTR));
+
+				String[] parts = tfs.split("(\\s\\s\\s+|\n)");
+				for(int i=0; (i < parts.length) && (i <4); i++){
+					if (i==0) setVal(ImageStatsItems.Desc1,parts[i]);
+					if (i==1) setVal(ImageStatsItems.Desc2,parts[i]);
+					if (i==2) setVal(ImageStatsItems.Desc3,parts[i]);
+					if (i==3) setVal(ImageStatsItems.Desc4,parts[i]);
+				}
+				tiffext.close();
+				return fileTest.fileTest(f);
+			}
 		}
+		public ImageStats create(String key) {return new ImageStats(key);}
 	}
+	public static StatsItemConfig details = StatsItemConfig.create(ImageStatsItems.class);
 	
 	public CountTiff(FTDriver dt) {
 		super(dt);
@@ -88,7 +93,7 @@ class CountTiff extends DefaultFileTest {
 		return null;
 	}
     public Stats createStats(String key){ 
-    	return new ImageStats(key);
+    	return Generator.INSTANCE.create(key);
     }
     public StatsItemConfig getStatsDetails() {
     	return details;

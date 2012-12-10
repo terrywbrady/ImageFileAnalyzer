@@ -6,6 +6,7 @@ import gov.nara.nwts.ftapp.filetest.FileTest;
 import gov.nara.nwts.ftapp.filter.JpegFileTestFilter;
 import gov.nara.nwts.ftappImg.jpeg.JpegExtractor;
 import gov.nara.nwts.ftapp.stats.Stats;
+import gov.nara.nwts.ftapp.stats.StatsGenerator;
 import gov.nara.nwts.ftapp.stats.StatsItem;
 import gov.nara.nwts.ftapp.stats.StatsItemConfig;
 import gov.nara.nwts.ftapp.stats.StatsItemEnum;
@@ -46,39 +47,44 @@ class CountJpeg extends DefaultFileTest {
 		public StatsItem si() {return si;}
 	}
 	
-	public static StatsItemConfig details = StatsItemConfig.create(JpegCountStatsItems.class);
-	private class JpegStats extends Stats {
+	public static enum Generator implements StatsGenerator {
+		INSTANCE;
 
-		public JpegStats(String key) {
-			super(key);
-			init(details);
+		private class JpegStats extends Stats {
+
+			public JpegStats(String key) {
+				super(details, key);
+			}
+			
+			
+			public Object compute(File f, FileTest fileTest) {
+				JpegExtractor jext = new JpegExtractor(f);
+				setVal(JpegCountStatsItems.BitsPerSample,jext.getInt("tiff:BitsPerSample", 0));
+				setVal(JpegCountStatsItems.ColorSpace, jext.getAttribute("Color Space"));
+				setVal(JpegCountStatsItems.Headline, jext.getAttribute("Headline"));
+				setVal(JpegCountStatsItems.Caption, jext.getAttribute("Caption/Abstract"));
+				setVal(JpegCountStatsItems.Keywords, jext.getAttribute("Keywords"));
+
+				setVal(JpegCountStatsItems.XResolution, jext.getAttribute("X Resolution"));
+				setVal(JpegCountStatsItems.YResolution, jext.getAttribute("Y Resolution"));
+
+				setVal(JpegCountStatsItems.TiffXResolution, jext.getFloat("tiff:XResolution", 0));
+				setVal(JpegCountStatsItems.TiffYResolution, jext.getFloat("tiff:YResolution", 0));
+				setVal(JpegCountStatsItems.TiffImageWidth, jext.getAttribute("tiff:ImageWidth"));
+				setVal(JpegCountStatsItems.TiffImageHeigth, jext.getAttribute("tiff:ImageLength"));
+
+				setVal(JpegCountStatsItems.ImageWidth, jext.getAttribute("Image Width"));
+				setVal(JpegCountStatsItems.ImageHeight, jext.getAttribute("Image Height"));
+				setVal(JpegCountStatsItems.ExifImageWidth, jext.getAttribute("Exif Image Width"));
+				setVal(JpegCountStatsItems.ExifImageHeigth, jext.getAttribute("Exif Image Height"));
+				jext.close();
+				return fileTest.fileTest(f);
+			}
 		}
-		
-		
-		public Object compute(File f, FileTest fileTest) {
-			JpegExtractor jext = new JpegExtractor(f);
-			setVal(JpegCountStatsItems.BitsPerSample,jext.getInt("tiff:BitsPerSample", 0));
-			setVal(JpegCountStatsItems.ColorSpace, jext.getAttribute("Color Space"));
-			setVal(JpegCountStatsItems.Headline, jext.getAttribute("Headline"));
-			setVal(JpegCountStatsItems.Caption, jext.getAttribute("Caption/Abstract"));
-			setVal(JpegCountStatsItems.Keywords, jext.getAttribute("Keywords"));
-
-			setVal(JpegCountStatsItems.XResolution, jext.getAttribute("X Resolution"));
-			setVal(JpegCountStatsItems.YResolution, jext.getAttribute("Y Resolution"));
-
-			setVal(JpegCountStatsItems.TiffXResolution, jext.getFloat("tiff:XResolution", 0));
-			setVal(JpegCountStatsItems.TiffYResolution, jext.getFloat("tiff:YResolution", 0));
-			setVal(JpegCountStatsItems.TiffImageWidth, jext.getAttribute("tiff:ImageWidth"));
-			setVal(JpegCountStatsItems.TiffImageHeigth, jext.getAttribute("tiff:ImageLength"));
-
-			setVal(JpegCountStatsItems.ImageWidth, jext.getAttribute("Image Width"));
-			setVal(JpegCountStatsItems.ImageHeight, jext.getAttribute("Image Height"));
-			setVal(JpegCountStatsItems.ExifImageWidth, jext.getAttribute("Exif Image Width"));
-			setVal(JpegCountStatsItems.ExifImageHeigth, jext.getAttribute("Exif Image Height"));
-			jext.close();
-			return fileTest.fileTest(f);
-		}
+		public JpegStats create(String key) {return new JpegStats(key);}
 	}
+
+	public static StatsItemConfig details = StatsItemConfig.create(JpegCountStatsItems.class);
 	public CountJpeg(FTDriver dt) {
 		super(dt);
 	}
@@ -96,7 +102,7 @@ class CountJpeg extends DefaultFileTest {
 		return null;
 	}
     public Stats createStats(String key){ 
-    	return new JpegStats(key);
+    	return Generator.INSTANCE.create(key);
     }
     public StatsItemConfig getStatsDetails() {
     	return details;

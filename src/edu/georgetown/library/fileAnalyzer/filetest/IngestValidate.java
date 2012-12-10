@@ -1,8 +1,10 @@
 package edu.georgetown.library.fileAnalyzer.filetest;
 
+import edu.georgetown.library.fileAnalyzer.filetest.IngestValidate.Generator.DSpaceStats;
 import gov.nara.nwts.ftapp.FTDriver;
 import gov.nara.nwts.ftapp.filetest.DefaultFileTest;
 import gov.nara.nwts.ftapp.stats.Stats;
+import gov.nara.nwts.ftapp.stats.StatsGenerator;
 import gov.nara.nwts.ftapp.stats.StatsItem;
 import gov.nara.nwts.ftapp.stats.StatsItemConfig;
 import gov.nara.nwts.ftapp.stats.StatsItemEnum;
@@ -82,36 +84,39 @@ public class IngestValidate extends DefaultFileTest {
 		public StatsItem si() {return si;}
 	}
 
-	public static StatsItemConfig details = StatsItemConfig.create(DSpaceStatsItems.class);
-	public class DSpaceStats extends Stats {
-		
-		public DSpaceStats(String key) {
-			super(key);
-			init(details);
-		}
+	public static enum Generator implements StatsGenerator {
+		INSTANCE;
+		public class DSpaceStats extends Stats {
+			
+			public DSpaceStats(String key) {
+				super(details, key);
+			}
 
-		public void setInfo(DSpaceInfo info) {
-			setVal(DSpaceStatsItems.ItemFolder, info.overall_stat);
-			setVal(DSpaceStatsItems.OverallStat, info.files.length);
-			setVal(DSpaceStatsItems.ContentsStat, info.contents_stat);
-			setVal(DSpaceStatsItems.ContentFileCount, info.contentsList.size());
-			setVal(DSpaceStatsItems.DublinCoreStat, info.dc_stat);
-			setVal(DSpaceStatsItems.ItemTitle, info.title);
-			setVal(DSpaceStatsItems.Author, info.author);
-			setVal(DSpaceStatsItems.Date, info.date);
-			setVal(DSpaceStatsItems.Language, info.language);
-			setVal(DSpaceStatsItems.Subject,info.subject);
-			setVal(DSpaceStatsItems.Format,info.format);
-			setVal(DSpaceStatsItems.Publisher,info.publisher);
-			setVal(DSpaceStatsItems.PrimaryBitstream,info.primary);
-			setVal(DSpaceStatsItems.Thumbnail,info.thumbnail);
-			setVal(DSpaceStatsItems.License,info.license);
-			setVal(DSpaceStatsItems.Text,info.text);
-			setVal(DSpaceStatsItems.Other,info.other);
-		
-		}
+			public void setInfo(DSpaceInfo info) {
+				setVal(DSpaceStatsItems.ItemFolder, info.overall_stat);
+				setVal(DSpaceStatsItems.OverallStat, info.files.length);
+				setVal(DSpaceStatsItems.ContentsStat, info.contents_stat);
+				setVal(DSpaceStatsItems.ContentFileCount, info.contentsList.size());
+				setVal(DSpaceStatsItems.DublinCoreStat, info.dc_stat);
+				setVal(DSpaceStatsItems.ItemTitle, info.title);
+				setVal(DSpaceStatsItems.Author, info.author);
+				setVal(DSpaceStatsItems.Date, info.date);
+				setVal(DSpaceStatsItems.Language, info.language);
+				setVal(DSpaceStatsItems.Subject,info.subject);
+				setVal(DSpaceStatsItems.Format,info.format);
+				setVal(DSpaceStatsItems.Publisher,info.publisher);
+				setVal(DSpaceStatsItems.PrimaryBitstream,info.primary);
+				setVal(DSpaceStatsItems.Thumbnail,info.thumbnail);
+				setVal(DSpaceStatsItems.License,info.license);
+				setVal(DSpaceStatsItems.Text,info.text);
+				setVal(DSpaceStatsItems.Other,info.other);
+			
+			}
 
+		}
+		public DSpaceStats create(String key) {return new DSpaceStats(key);}
 	}
+	public static StatsItemConfig details = StatsItemConfig.create(DSpaceStatsItems.class);
 	
 	public class DSpaceInfo {
 		public File contents = null;
@@ -275,8 +280,8 @@ public class IngestValidate extends DefaultFileTest {
 		return info.files.length;
 	}
 
-    public Stats createStats(String key){ 
-    	return new DSpaceStats(key);
+    public DSpaceStats createStats(String key){ 
+    	return Generator.INSTANCE.create(key);
     }
     public StatsItemConfig getStatsDetails() {
     	return details;

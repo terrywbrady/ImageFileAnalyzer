@@ -20,6 +20,7 @@ import gov.nara.nwts.ftapp.Timer;
 import gov.nara.nwts.ftapp.importer.DefaultImporter;
 import gov.nara.nwts.ftapp.importer.DelimitedFileImporter;
 import gov.nara.nwts.ftapp.stats.Stats;
+import gov.nara.nwts.ftapp.stats.StatsGenerator;
 import gov.nara.nwts.ftapp.stats.StatsItem;
 import gov.nara.nwts.ftapp.stats.StatsItemConfig;
 import gov.nara.nwts.ftapp.stats.StatsItemEnum;
@@ -41,14 +42,11 @@ public class IngestFolderCreate extends DefaultImporter {
 		public StatsItem si() {return si;}
 	}
 
-	public class IngestStats extends Stats {
-		
-		public IngestStats(String key) {
-			super(key);
-			init(details);
-		}
-
+	public static enum Generator implements StatsGenerator {
+		INSTANCE;
+		public Stats create(String key) {return new Stats(details, key);}
 	}
+	static StatsItemConfig details = StatsItemConfig.create(IngestStatsItems.class);
 	class column {
 		boolean valid;
 		boolean fixed;
@@ -110,7 +108,6 @@ public class IngestFolderCreate extends DefaultImporter {
 	HashMap<String,column> colByName;
 	HashMap<String,Integer> folders;
 	
-	StatsItemConfig details = StatsItemConfig.create(IngestStatsItems.class); 
 	public StatsItemConfig getDetails() {
 		StatsItemConfig mydetails = StatsItemConfig.create(IngestStatsItems.class); 
 		for(column col: colHeaderDefs) {
@@ -255,7 +252,7 @@ public class IngestFolderCreate extends DefaultImporter {
 		for(int r=1; r<data.size(); r++) {
 			Vector<String> cols = data.get(r);
 			String key = nf.format(rowKey++);
-			IngestStats stats = new IngestStats(key);
+			Stats stats = Generator.INSTANCE.create(key);
 			importRow(selectedFile, cols, stats);
 			
 			types.put(key, stats);

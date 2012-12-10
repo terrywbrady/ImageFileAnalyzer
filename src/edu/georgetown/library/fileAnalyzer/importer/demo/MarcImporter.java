@@ -13,6 +13,7 @@ import gov.nara.nwts.ftapp.FTDriver;
 import gov.nara.nwts.ftapp.Timer;
 import gov.nara.nwts.ftapp.importer.DefaultImporter;
 import gov.nara.nwts.ftapp.stats.Stats;
+import gov.nara.nwts.ftapp.stats.StatsGenerator;
 import gov.nara.nwts.ftapp.stats.StatsItem;
 import gov.nara.nwts.ftapp.stats.StatsItemConfig;
 import gov.nara.nwts.ftapp.stats.StatsItemEnum;
@@ -38,15 +39,11 @@ public class MarcImporter extends DefaultImporter {
 		public StatsItem si() {return si;}
 	}
 
-	static StatsItemConfig details = StatsItemConfig.create(MarcStatsItems.class);
-	public class MarcStats extends Stats {
-		
-		public MarcStats(String key) {
-			super(key);
-			init(details);
-		}
-
+	public static enum Generator implements StatsGenerator {
+		INSTANCE;
+		public Stats create(String key) {return new Stats(details, key);}
 	}
+	static StatsItemConfig details = StatsItemConfig.create(MarcStatsItems.class);
 	
 	public MarcImporter(FTDriver dt) {
 		super(dt);
@@ -85,7 +82,7 @@ public class MarcImporter extends DefaultImporter {
 		FileReader fr = new FileReader(selectedFile);
 		BufferedReader br = new BufferedReader(fr);
 		TreeMap<String,Stats> types = new TreeMap<String,Stats>();
-		MarcStats rec = null;
+		Stats rec = null;
 		for(String line=br.readLine(); line!=null; line=br.readLine()){
 			Matcher m = p.matcher(line);
 			if (m.matches()) {
@@ -96,7 +93,7 @@ public class MarcImporter extends DefaultImporter {
 					if (rec != null) {
 						types.put(rec.key, rec);
 					}
-					rec = new MarcStats(val);
+					rec = Generator.INSTANCE.create(val);
 				} else if (rec == null) {
 					continue;
 				} else if (field.equals("100")) {

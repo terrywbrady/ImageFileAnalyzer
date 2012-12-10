@@ -11,11 +11,14 @@ import java.util.Vector;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
+import edu.georgetown.library.fileAnalyzer.importer.demo.TabSepToDC.Generator.DCStats;
+
 import gov.nara.nwts.ftapp.ActionResult;
 import gov.nara.nwts.ftapp.FTDriver;
 import gov.nara.nwts.ftapp.Timer;
 import gov.nara.nwts.ftapp.importer.DelimitedFileImporter;
 import gov.nara.nwts.ftapp.stats.Stats;
+import gov.nara.nwts.ftapp.stats.StatsGenerator;
 import gov.nara.nwts.ftapp.stats.StatsItem;
 import gov.nara.nwts.ftapp.stats.StatsItemConfig;
 import gov.nara.nwts.ftapp.stats.StatsItemEnum;
@@ -33,15 +36,15 @@ public class TabSepToDC extends DelimitedFileImporter {
 	
 	private static enum DCStatsItems implements StatsItemEnum {
 		LineNo(StatsItem.makeStringStatsItem("LineNo").setExport(false)),
-		Status(StatsItem.makeEnumStatsItem(status.class)),
-		ItemFolder(StatsItem.makeStringStatsItem("Item Folder", 200)),
-		ItemTitle(StatsItem.makeStringStatsItem("Item Title", 150)),
-		Author(StatsItem.makeStringStatsItem("Author", 150)),
-		Date(StatsItem.makeStringStatsItem("Date", 80)),
-		Language(StatsItem.makeStringStatsItem("Language", 80)),
-		Subject(StatsItem.makeStringStatsItem("Subject", 150)),
-		Format(StatsItem.makeStringStatsItem("Format", 150)),
-		Publsiher(StatsItem.makeStringStatsItem("Publisher", 150)),
+		Status(StatsItem.makeEnumStatsItem(status.class, "Status")),
+		ItemFolder(0, StatsItem.makeStringStatsItem("Item Folder", 200)),
+		ItemTitle(1, StatsItem.makeStringStatsItem("Item Title", 150)),
+		Author(2, StatsItem.makeStringStatsItem("Author", 150)),
+		Date(3, StatsItem.makeStringStatsItem("Date", 80)),
+		Language(4, StatsItem.makeStringStatsItem("Language", 80)),
+		Subject(5, StatsItem.makeStringStatsItem("Subject", 150)),
+		Format(6, StatsItem.makeStringStatsItem("Format", 150)),
+		Publsiher(7, StatsItem.makeStringStatsItem("Publisher", 150)),
 		;
 		
 		StatsItem si;
@@ -51,27 +54,30 @@ public class TabSepToDC extends DelimitedFileImporter {
 		public StatsItem si() {return si;}
 	}
 
-	static StatsItemConfig details = StatsItemConfig.create(DCStatsItems.class);
-	private class DCStats extends Stats {
-		
-		public DCStats(String key) {
-			super(key);
-			init(details);
-		}
+	public static enum Generator implements StatsGenerator {
+		INSTANCE;
+		class DCStats extends Stats {
+			
+			public DCStats(String key) {
+				super(details, key);
+			}
 
-		public void setColumnVals(Vector<String> cols) {
-			for(DCStatsItems dc: DCStatsItems.values()) {
-				setColumnVal(dc, cols);
+			public void setColumnVals(Vector<String> cols) {
+				for(DCStatsItems dc: DCStatsItems.values()) {
+					setColumnVal(dc, cols);
+				}
+			}
+			
+			public void setColumnVal(DCStatsItems dc, Vector<String> cols) {
+				if (dc.col == null) return;
+				if (cols.size() > dc.col) {
+					setVal(dc, cols.get(dc.col));
+				}
 			}
 		}
-		
-		public void setColumnVal(DCStatsItems dc, Vector<String> cols) {
-			if (dc.col == null) return;
-			if (cols.size() > dc.col) {
-				setVal(dc, cols.get(dc.col));
-			}
-		}
+		public DCStats create(String key) {return new DCStats(key);}
 	}
+	static StatsItemConfig details = StatsItemConfig.create(DCStatsItems.class);
 
 	public TabSepToDC(FTDriver dt) {
 		super(dt);
@@ -125,7 +131,7 @@ public class TabSepToDC extends DelimitedFileImporter {
 		for(String line=br.readLine(); line!=null; line=br.readLine()){
 			Vector<String> cols = parseLine(line, getSeparator());
 			String key = nf.format(rowKey++);
-			DCStats stats = new DCStats(key);
+			DCStats stats = Generator.INSTANCE.create(key);
 			if (cols.size() == 8) {
 				stats.setVal(DCStatsItems.Status, status.PASS);
 				createItems(d, cols);

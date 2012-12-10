@@ -21,6 +21,7 @@ import gov.nara.nwts.ftapp.YN;
 import gov.nara.nwts.ftapp.importer.DefaultImporter;
 import gov.nara.nwts.ftapp.importer.DelimitedFileImporter;
 import gov.nara.nwts.ftapp.stats.Stats;
+import gov.nara.nwts.ftapp.stats.StatsGenerator;
 import gov.nara.nwts.ftapp.stats.StatsItem;
 import gov.nara.nwts.ftapp.stats.StatsItemConfig;
 import gov.nara.nwts.ftapp.stats.StatsItemEnum;
@@ -170,15 +171,11 @@ public class CreateDateParser extends DefaultImporter {
 		public StatsItem si() {return si;}
 	}
 
-	class DSpaceDateStats extends Stats {
-
-		public DSpaceDateStats(String key) {
-			super(key);
-			init(details);
-		}
-		
+	public static enum Generator implements StatsGenerator {
+		INSTANCE;
+		public Stats create(String key) {return new Stats(details, key);}
 	}
-	
+
 	int cols = 8;
 	Object[][]mydetails;
 	
@@ -202,7 +199,7 @@ public class CreateDateParser extends DefaultImporter {
 		Vector<Vector<String>> data = DelimitedFileImporter.parseFile(selectedFile, "|", true);
 		for (Vector<String> v : data) {
 			String item = v.get(0);
-			DSpaceDateStats stats = new DSpaceDateStats(item);
+			Stats stats = Generator.INSTANCE.create(item);
 			
 			DateValidationStatus[] dstats = new DateValidationStatus[TY.values().length];
 			DateValidationStatus itemstatus = DateValidationStatus.MISSING;

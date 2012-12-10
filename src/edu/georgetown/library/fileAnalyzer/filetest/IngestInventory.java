@@ -15,6 +15,7 @@ import gov.nara.nwts.ftapp.filter.TiffFileTestFilter;
 import gov.nara.nwts.ftapp.ftprop.FTProp;
 import gov.nara.nwts.ftapp.ftprop.FTPropEnum;
 import gov.nara.nwts.ftapp.stats.Stats;
+import gov.nara.nwts.ftapp.stats.StatsGenerator;
 import gov.nara.nwts.ftapp.stats.StatsItem;
 import gov.nara.nwts.ftapp.stats.StatsItemConfig;
 import gov.nara.nwts.ftapp.stats.StatsItemEnum;
@@ -32,30 +33,28 @@ public class IngestInventory extends DefaultFileTest {
 		public StatsItem si() {return si;}
 	}
 
-	static StatsItemConfig details = StatsItemConfig.create(InventoryStatsItems.class);
-	public class InventoryStats extends Stats {
-		
-		public InventoryStats(String key) {
-			super(key);
-			init(details);
+	public static enum Generator implements StatsGenerator {
+		INSTANCE;
+		public Stats create(String key) {
+			return new Stats(details, key) {
+				public Object compute(File f, FileTest fileTest) {
+					Object o = fileTest.fileTest(f);
+					
+					String path = f.getAbsolutePath().substring(fileTest.getRoot().getAbsolutePath().length()+1);
+					String tpath = path + ".jpg";
+					String tfull = fileTest.getRoot().getAbsolutePath() + "\\" + tpath;
+					File f2 = new File(tfull);
+					if (!f2.exists()) tpath = "";
+					
+					setVal(InventoryStatsItems.File, path);
+					setVal(InventoryStatsItems.ThumbFile, tpath);
+					
+					return o;
+				}				
+			};
 		}
-		
-		public Object compute(File f, FileTest fileTest) {
-			Object o = fileTest.fileTest(f);
-			
-			String path = f.getAbsolutePath().substring(fileTest.getRoot().getAbsolutePath().length()+1);
-			String tpath = path + ".jpg";
-			String tfull = fileTest.getRoot().getAbsolutePath() + "\\" + tpath;
-			File f2 = new File(tfull);
-			if (!f2.exists()) tpath = "";
-			
-			setVal(InventoryStatsItems.File, path);
-			setVal(InventoryStatsItems.ThumbFile, tpath);
-			
-			return o;
-		}
-
 	}
+	static StatsItemConfig details = StatsItemConfig.create(InventoryStatsItems.class);
 
 	public static final String[] META = { "NA", "dc.contributor",
 			"dc.coverage.spatial", "dc.coverage.temporal", "dc.creator",
@@ -156,7 +155,7 @@ public class IngestInventory extends DefaultFileTest {
 	}
 
     public Stats createStats(String key){
-    	return new InventoryStats(key);
+    	return Generator.INSTANCE.create(key);
     }
 
 }
