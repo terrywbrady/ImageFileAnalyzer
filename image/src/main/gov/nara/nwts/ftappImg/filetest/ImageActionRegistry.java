@@ -14,8 +14,8 @@ public class ImageActionRegistry extends ActionRegistry {
 
 	public ImageActionRegistry(FTDriver dt, boolean modifyAllowed) {
 		super(dt, modifyAllowed);
-		//add(new CountTiff(dt));
-		//add(new CountJpeg(dt));
+		add(new CountTiff(dt));
+		add(new CountJpeg(dt));
 		add(new GenericImageProperties(dt));
 	}
 	
