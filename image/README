@@ -1,3 +1,17 @@
+This code has been derived from the NARA File Analyzer and Metadata Harvester which is available at 
+https://github.com/usnationalarchives/File-Analyzer.
+
+PREREQUISITES
+- JDK 1.6 or higher
+- Maven (or you will need to compile the modules manually)
+
+Maven module dependencies
+- Core file analyzer: 
+	https://github.com/terrywbrady/File-Analyzer
+	Build and install this to your local maven repository
+- Apache Tika
+	Availabe in the Apache Maven Repostiory
+
 This code requires the following additional libraries in order to execute.
 
 Java Advanced Imaging 1.1.4 jai_core.jar 
@@ -11,4 +25,11 @@ If you can find them, add these files to your local maven repository.
 mvn install:install-file -DgroupId=javax.media -DartifactId=jai_core -Dversion=1.1.4 -Dpackaging=jar -Dfile=<path-to-file>
 mvn install:install-file -DgroupId=com.sun.media -DartifactId=jai_codec -Dversion=1.1.4 -Dpackaging=jar -Dfile=<path-to-file>
 
-This package also uses Apache Tika which is availabe via the Maven central repository.
+INSTALLATION
+- Clone this code to your computer
+- Run mvn install
+
+DEPLOYMENTS
+- The resulting target directory will contain a full list of all of the components of Apache Tika
+- ImageFileAnalyzer.jar is a self-extracting jar file that references all of the dependent jar files
+
